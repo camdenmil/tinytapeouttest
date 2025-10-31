@@ -9,12 +9,12 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+this is a simple divide by 2 clock divider
 
 ## How to test
 
-Explain how to use your project
+Feed a square wave into io1 and you'll get that same signal/2 at the output
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+No external hardware
