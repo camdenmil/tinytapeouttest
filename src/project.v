@@ -16,10 +16,6 @@ module tt_um_camdenmil_sky25b (
   //assign uo_out[7:1] = 0;  // Example: ou_out is the sum of ui_in and uio_in
   assign uio_out = 0;
   assign uio_oe  = 0;
-
-
-
-  wire [2:0] div_default = 3'b000;
   
   wire div_clk_out;
   wire [15:0] spi_data;
@@ -42,11 +38,10 @@ module tt_um_camdenmil_sky25b (
   assign uo_out = pwm_out;
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, 1'b0};
   wire _unusedui_in = &{ui_in, 8'b0};
-  wire _uniseduio_in = &{uio_in[7:4], uio_in[1], 5'b0};
+  wire _unuseduio_in1 = &{uio_in[7:4], 4'b0};
+  wire _unuseduio_in2 = &{uio_in[1], 1'b0};
   wire _unusedspi = &{spi_data[11:8], 4'b0};
-  //wire _unusedpwm_wr = pwm_wr[7:1];
 
   clock_divider #(.CLK_DIV_SIZE(CLK_DIV_WIDTH)) clkdiv (.clk (clk),
                         .wr (clk_div_wr),
