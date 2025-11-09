@@ -11,13 +11,14 @@ module clock_divider
     output wire [CLK_DIV_SIZE-1:0] div_reg
 );
     reg [CLK_DIV_SIZE-1:0] div;
-    reg [CLK_DIV_SIZE-1:0] div_counter;
+    reg [2**CLK_DIV_SIZE:0] div_counter;
     wire div_tick = div_counter == (1 << div) - 1;
     assign div_reg = div;
     always @(posedge clk) begin
         if (~rst_n) begin
             div_counter <= 0;
             div <= 0;
+            clk_out <= 0;
         end else begin
             if (wr) begin
                 div_counter <= 0;

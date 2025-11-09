@@ -10,12 +10,11 @@ module tt_um_camdenmil_sky25b (
 
 );
 
-  parameter PWM_REG_WIDTH = 8;
-  parameter CLK_DIV_WIDTH = 3;
+  parameter PWM_REG_WIDTH = 10;
+  parameter CLK_DIV_WIDTH = 4;
   // All output pins must be assigned. If not used, assign to 0.
-  //assign uo_out[7:1] = 0;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+  assign uio_out[7:1] = 0;
+  assign uio_oe[7:1]  = 0;
   
   wire div_clk_out;
   wire [15:0] spi_data;
@@ -27,8 +26,12 @@ module tt_um_camdenmil_sky25b (
   reg clk_div_wr;
   wire [CLK_DIV_WIDTH-1:0] clk_div_reg;
   wire fast_clk;
+  reg div_clk_out_reg;
+  reg div_clk_out_en;
 
 
+  assign uio_out[0] = div_clk_out_reg;
+  assign uio_oe[0] = div_clk_out_en;
   assign fast_clk = clk_div_reg == 0;
   assign pwm_compare = spi_data[PWM_REG_WIDTH-1:0];
   assign dev_addr[3:0] = spi_data[15:12];
@@ -38,9 +41,9 @@ module tt_um_camdenmil_sky25b (
   assign uo_out = pwm_out;
 
   // List all unused inputs to prevent warnings
-  wire _unusedui_in = &{ui_in, 8'b0};
+  wire _unusedui_in = &{ui_in[7:2], 6'b0};
   wire _unuseduio_in1 = &{uio_in[7:4], 4'b0};
-  wire _unuseduio_in2 = &{uio_in[1], 1'b0};
+  wire _unuseduio_in2 = &{uio_in[1], ena, 1'b0};
   wire _unusedspi = &{spi_data[11:8], 4'b0};
 
   clock_divider #(.CLK_DIV_SIZE(CLK_DIV_WIDTH)) clkdiv (.clk (clk),
@@ -52,7 +55,7 @@ module tt_um_camdenmil_sky25b (
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm0 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[0]),
-            .ena (ena),
+            .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
             .pwm_out (pwm_out[0]),
@@ -60,7 +63,7 @@ module tt_um_camdenmil_sky25b (
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm1 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[1]),
-            .ena (ena),
+            .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
             .pwm_out (pwm_out[1]),
@@ -68,7 +71,7 @@ module tt_um_camdenmil_sky25b (
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm2 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[2]),
-            .ena (ena),
+            .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
             .pwm_out (pwm_out[2]),
@@ -76,7 +79,7 @@ module tt_um_camdenmil_sky25b (
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm3 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[3]),
-            .ena (ena),
+            .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
             .pwm_out (pwm_out[3]),
@@ -84,7 +87,7 @@ module tt_um_camdenmil_sky25b (
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm4 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[4]),
-            .ena (ena),
+            .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
             .pwm_out (pwm_out[4]),
@@ -92,7 +95,7 @@ module tt_um_camdenmil_sky25b (
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm5 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[5]),
-            .ena (ena),
+            .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
             .pwm_out (pwm_out[5]),
@@ -100,7 +103,7 @@ module tt_um_camdenmil_sky25b (
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm6 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[6]),
-            .ena (ena),
+            .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
             .pwm_out (pwm_out[6]),
@@ -108,7 +111,7 @@ module tt_um_camdenmil_sky25b (
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm7 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[7]),
-            .ena (ena),
+            .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
             .pwm_out (pwm_out[7]),
@@ -140,6 +143,13 @@ module tt_um_camdenmil_sky25b (
     end else begin
       clk_div_wr <= 0;
       pwm_wr <= 0;
+    end
+    if (ui_in[0]) begin
+      div_clk_out_en <= 1'b1;
+      div_clk_out_reg <= div_clk_out;
+    end else begin
+      div_clk_out_en <= 1'b0;
+      div_clk_out_reg <= 1'b0;
     end
   end
 
