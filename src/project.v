@@ -23,48 +23,61 @@ module tt_um_camdenmil_sky25b (
 
   wire [2:0] div_default = 3'b000;
   
-  wire pwm_clk;
+  wire div_clk_out;
   wire [15:0] spi_data;
   wire data_rdy;
   wire [PWM_REG_WIDTH-1:0] pwm_compare;
-  wire [2:0] pwm_addr;
+  wire [3:0] dev_addr;
   reg [7:0] pwm_wr;
   wire [CLK_DIV_WIDTH-1:0] clk_div_in;
+  reg clk_div_wr;
+  wire clk_div_reg;
+  wire fast_clk;
 
 
-
+  assign fast_clk = clk_div_reg == 0;
   assign pwm_compare = spi_data[PWM_REG_WIDTH-1:0];
-  assign pwm_addr[2:0] = spi_data[15:13];
+  assign dev_addr[3:0] = spi_data[15:12];
   assign clk_div_in = spi_data[CLK_DIV_WIDTH-1:0];
 
   reg pwm_out;
   assign uo_out[0] = pwm_out;
 
   clock_divider #(.CLK_DIV_SIZE(CLK_DIV_WIDTH)) clkdiv (.clk (clk),
-                        .wr (clk),
+                        .wr (clk_div_wr),
                         .rst_n (rst_n),
                         .div_in (div_default),
-                        .clk_out (pwm_clk));
-  pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm0 (.clk_in (pwm_clk),
+                        .clk_out (div_clk_out),
+                        .div_reg (clk_div_reg));
+  pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm0 (.clk_in (div_clk_out),
+            .sys_clk (clk),
             .wr (pwm_wr[0]),
             .ena (ena),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out));
+            .pwm_out (pwm_out),
+            .use_sys (fast_clk));
   spi_interface spi ( .miso (uio_in[2]),
                       .sck (uio_in[3]),
                       .cs (uio_in[0]),
                       .rst_n (rst_n),
+                      .sys_clk (clk),
                       .data (spi_data),
                       .data_rdy (data_rdy));
 
-  always @(posedge data_rdy) begin
-    if (pwm_addr < 8) begin
-      pwm_wr[pwm_addr] <= 1'b1;
+  always @(posedge clk) begin
+    if (~rst_n || ~data_rdy) begin
+      pwm_wr <= 0;
+      clk_div_wr <= 0;
     end
-  end
-  always @(negedge data_rdy) begin
-    pwm_wr <= 0;
+    if (data_rdy) begin
+      if (dev_addr <= 4'h7) begin
+        pwm_wr[dev_addr] <= 1'b1;
+      end
+      if (dev_addr == 4'h8) begin
+        clk_div_wr <= 1;
+      end
+    end
   end
 
 endmodule
