@@ -21,6 +21,7 @@ module tt_um_camdenmil_sky25b (
 
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire _unused8 = &{uio_in, 8'b0};
 
 
   reg pwm_out;
@@ -29,9 +30,11 @@ module tt_um_camdenmil_sky25b (
   reg [COMPARE_SIZE-1:0] compare;
   reg [COMPARE_SIZE-1:0] counter;
   reg [CLK_DIV_SIZE-1:0] div;
-  reg [CLK_DIV_SIZE:0] div_counter;
+  reg [CLK_DIV_SIZE-1:0] div_counter;
 
   assign compare[7:0] = ui_in[7:0];
+
+  wire div_tick = (div_counter == div);
 
   always @(posedge clk) begin
     if (~rst_n) begin
@@ -39,11 +42,8 @@ module tt_um_camdenmil_sky25b (
       div_counter <= 0;
       div <= 0;
     end else begin
-      div_counter = div_counter + 1'b1;
-      if (div_counter > div) begin
-        counter <= counter + 1'b1;
-        div_counter <= 0;
-      end
+      div_counter <= div_tick ? 0 : div_counter + 1'b1;
+      counter     <= div_tick ? counter + 1'b1 : counter;
       // Sacrifice one step of resolution at full duty cycle to get 100%
       pwm_out <= (compare == (2**COMPARE_SIZE)-1) ? 1 : (counter < compare);
     end

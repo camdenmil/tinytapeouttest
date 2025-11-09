@@ -6,7 +6,7 @@ from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
 @cocotb.test()
 async def test_pwm(dut):
     dut._log.info("start")
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
     # reset
@@ -24,4 +24,7 @@ async def test_pwm(dut):
     await ClockCycles(dut.clk, 512)
 
     dut.ui_in.value = 255
+    await ClockCycles(dut.clk, 512)
+
+    dut.ui_in.value = 1
     await ClockCycles(dut.clk, 512)
