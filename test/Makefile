@@ -3,6 +3,7 @@
 
 # defaults
 SIM ?= icarus
+WAVES ?= 1
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
 PROJECT_SOURCES = project.v
@@ -35,7 +36,7 @@ COMPILE_ARGS 		+= -I$(SRC_DIR)
 
 # Include the testbench sources:
 VERILOG_SOURCES += $(PWD)/tb.v
-TOPLEVEL = tb
+TOPLEVEL = testbench
 
 # MODULE is the basename of the Python test file
 MODULE = test

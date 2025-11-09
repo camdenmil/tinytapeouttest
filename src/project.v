@@ -9,14 +9,43 @@ module tt_um_camdenmil_sky25b (
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
+
 );
+  parameter COMPARE_SIZE = 8;
+  parameter CLK_DIV_SIZE = 3;
 
   // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
+  assign uo_out[7:1] = 0;  // Example: ou_out is the sum of ui_in and uio_in
   assign uio_out = 0;
   assign uio_oe  = 0;
 
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, clk, rst_n, 1'b0};
 
+
+  reg pwm_out;
+  assign uo_out[0] = pwm_out;
+
+  reg [COMPARE_SIZE-1:0] compare;
+  reg [COMPARE_SIZE-1:0] counter;
+  reg [CLK_DIV_SIZE-1:0] div;
+  reg [CLK_DIV_SIZE:0] div_counter;
+
+  assign compare[7:0] = ui_in[7:0];
+
+  always @(posedge clk) begin
+    if (~rst_n) begin
+      counter <= 0;
+      div_counter <= 0;
+      div <= 0;
+    end else begin
+      div_counter = div_counter + 1'b1;
+      if (div_counter > div) begin
+        counter <= counter + 1'b1;
+        div_counter <= 0;
+      end
+      // Sacrifice one step of resolution at full duty cycle to get 100%
+      pwm_out <= (compare == (2**COMPARE_SIZE)-1) ? 1 : (counter < compare);
+    end
+  end
 endmodule
