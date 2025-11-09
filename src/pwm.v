@@ -13,16 +13,20 @@ module pwm_generator
     reg [COMPARE_SIZE-1:0] compare;
     reg [COMPARE_SIZE-1:0] counter;
     reg atomic_reg; // Only do one write per wr cycle
+    reg wait_cycle; // Track if we're waiting for a zero to start PWM'ing to avoid glitches
     always @(posedge sys_clk) begin
         if (~rst_n) begin
             counter <= 0;
             compare <= 0;
             pwm_out <= 0;
             atomic_reg <= 0;
+            wait_cycle <= 0;
         end else begin
             if (wr && ~atomic_reg) begin
                 compare <= compare_in;
-                // don't reset counter, keep PWM state updating at clk_in frequency
+                wait_cycle = 1'b1;
+                // don't reset counter but write 0 to avoid high-duty-cycle glitches
+                pwm_out <= 1'b0;
                 atomic_reg <= 1'b1;
             end else if (~wr)
                 atomic_reg <= 1'b0;
@@ -30,10 +34,17 @@ module pwm_generator
                 counter <= counter + 1'b1;
             end else if (clk_in)
                 counter <= counter + 1'b1;
-            // Sacrifice one step of resolution at full duty cycle to get 100%
-            pwm_out <= ena ? 0 : 
-                (compare == (2**COMPARE_SIZE)-1) ? 1 : 
-                (counter < compare);
+            
+            if (counter == 0)
+                wait_cycle <= 1'b0;
+            if (ena && ~wait_cycle) begin
+                // Sacrifice one step of resolution at full duty cycle to get 100%
+                if ((compare == (2**COMPARE_SIZE)-1) || (counter < compare))
+                    pwm_out <= 1;
+                else
+                    pwm_out <= 0;
+            end else
+                pwm_out <= 0;
         end
     end
 endmodule

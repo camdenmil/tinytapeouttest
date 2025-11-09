@@ -17,7 +17,7 @@ module spi_interface (
             if (~sck_rec && sck) begin // First clock cycle with sck rising edge
                 sck_rec <= 1;
                 recv_buff <= {recv_buff[14:0], miso};
-                recv_ctr <= recv_ctr + 1;
+                recv_ctr <= recv_ctr[4] ? 1 : recv_ctr + 1;
             end else if (sck_rec && ~sck) begin // Falling edge
                 sck_rec <= 0;
             end

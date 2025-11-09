@@ -34,21 +34,18 @@ async def test_pwm(dut):
 
     # reset
     dut._log.info("reset")
+    dut.ena.value = 1
     dut.rst_n.value = 0
     # set the compare value
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
-    spi_master.write_nowait([0x007F])
+    spi_master.write_nowait([0x007F, 0x10FF, 0x2001, 0x3000, 0x4069, 0x5010, 0x60F0, 0x70C9])
 
-    dut._log.info("Wait 1000 cycles")
-    await ClockCycles(dut.clk, 1000)
+    dut._log.info("Wait 2000 cycles")
+    await ClockCycles(dut.clk, 2000)
 
-    spi_master.write_nowait([0x00FF])
-    await ClockCycles(dut.clk, 1000)
+    spi_master.write_nowait([0x0000, 0x1000, 0x2000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000])
 
-    spi_master.write_nowait([0x0000])
-    await ClockCycles(dut.clk, 1000)
-
-    spi_master.write_nowait([0x0001])
-    await ClockCycles(dut.clk, 1000)
+    dut._log.info("Wait 2000 cycles")
+    await ClockCycles(dut.clk, 2000)
