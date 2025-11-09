@@ -8,7 +8,7 @@ module clock_divider
     input wire rst_n, // active-low
     input wire [CLK_DIV_SIZE-1:0] div_in,
     output reg clk_out,
-    output wire div_reg
+    output wire [CLK_DIV_SIZE-1:0] div_reg
 );
     reg [CLK_DIV_SIZE-1:0] div;
     reg [CLK_DIV_SIZE-1:0] div_counter;

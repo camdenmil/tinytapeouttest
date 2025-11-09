@@ -24,7 +24,7 @@ module pwm_generator
         end else begin
             if (wr && ~atomic_reg) begin
                 compare <= compare_in;
-                wait_cycle = 1'b1;
+                wait_cycle <= 1'b1;
                 // don't reset counter but write 0 to avoid high-duty-cycle glitches
                 pwm_out <= 1'b0;
                 atomic_reg <= 1'b1;

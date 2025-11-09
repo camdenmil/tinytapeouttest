@@ -29,7 +29,7 @@ module tt_um_camdenmil_sky25b (
   reg [7:0] pwm_wr;
   wire [CLK_DIV_WIDTH-1:0] clk_div_in;
   reg clk_div_wr;
-  wire clk_div_reg;
+  wire [CLK_DIV_WIDTH-1:0] clk_div_reg;
   wire fast_clk;
 
 
@@ -43,10 +43,10 @@ module tt_um_camdenmil_sky25b (
 
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, 1'b0};
-  wire _unused8 = &{ui_in, 8'b0};
-  wire _unusedspi = spi_data[12:8];
+  wire _unusedui_in = &{ui_in, 8'b0};
+  wire _uniseduio_in = &{uio_in[7:4], uio_in[1], 5'b0};
+  wire _unusedspi = &{spi_data[11:8], 4'b0};
   //wire _unusedpwm_wr = pwm_wr[7:1];
-  reg test_output;
 
   clock_divider #(.CLK_DIV_SIZE(CLK_DIV_WIDTH)) clkdiv (.clk (clk),
                         .wr (clk_div_wr),
@@ -130,7 +130,6 @@ module tt_um_camdenmil_sky25b (
 
   always @(posedge clk) begin
     if (~rst_n || ~data_rdy) begin
-      test_output <= 0;
       pwm_wr <= 0;
       clk_div_wr <= 0;
       exec_write <= 0;
@@ -139,7 +138,6 @@ module tt_um_camdenmil_sky25b (
       exec_write <= 1;
       if (dev_addr <= 4'h7) begin
         pwm_wr <= 4'b1 << dev_addr;
-        test_output <= 1;
       end
       if (dev_addr == 4'h8) begin
         clk_div_wr <= 1;
