@@ -24,6 +24,18 @@ module testbench ();
         wire VGND = 1'b0;
     `endif
 
+
+    // SPI bus to make testing easier
+    wire miso;
+    wire sck;
+    wire mosi;
+    wire cs;
+
+    assign uio_in[0] = cs;
+    assign uio_in[2] = mosi;
+    assign uio_in[3] = sck;
+    assign miso = 1'b0; // unused but needed to actually get the SPI lib to work
+
     tt_um_camdenmil_sky25b tt_um_camdenmil_sky25b (
 
         // Include power ports for the Gate Level test:
@@ -31,7 +43,7 @@ module testbench ();
             .VPWR(VPWR),
             .VGND(VGND),
         `endif
-        
+
         .ui_in      (ui_in),    // Dedicated inputs
         .uo_out     (uo_out),   // Dedicated outputs
         .uio_in     (uio_in),   // IOs: Input path

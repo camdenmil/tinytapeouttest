@@ -1,5 +1,3 @@
-`default_nettype none
-
 module tt_um_camdenmil_sky25b (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
@@ -11,41 +9,62 @@ module tt_um_camdenmil_sky25b (
     input  wire       rst_n     // reset_n - low to reset
 
 );
-  parameter COMPARE_SIZE = 8;
-  parameter CLK_DIV_SIZE = 3;
 
+  parameter PWM_REG_WIDTH = 8;
+  parameter CLK_DIV_WIDTH = 3;
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out[7:1] = 0;  // Example: ou_out is the sum of ui_in and uio_in
   assign uio_out = 0;
   assign uio_oe  = 0;
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire _unused = &{ena, 1'b0};
   wire _unused8 = &{uio_in, 8'b0};
 
+  wire [2:0] div_default = 3'b000;
+  
+  wire pwm_clk;
+  wire [15:0] spi_data;
+  wire data_rdy;
+  wire [PWM_REG_WIDTH-1:0] pwm_compare;
+  wire [2:0] pwm_addr;
+  reg [7:0] pwm_wr;
+  wire [CLK_DIV_WIDTH-1:0] clk_div_in;
+
+
+
+  assign pwm_compare = spi_data[PWM_REG_WIDTH-1:0];
+  assign pwm_addr[2:0] = spi_data[15:13];
+  assign clk_div_in = spi_data[CLK_DIV_WIDTH-1:0];
 
   reg pwm_out;
   assign uo_out[0] = pwm_out;
 
-  reg [COMPARE_SIZE-1:0] compare;
-  reg [COMPARE_SIZE-1:0] counter;
-  reg [CLK_DIV_SIZE-1:0] div;
-  reg [CLK_DIV_SIZE-1:0] div_counter;
+  clock_divider #(.CLK_DIV_SIZE(CLK_DIV_WIDTH)) clkdiv (.clk (clk),
+                        .wr (clk),
+                        .rst_n (rst_n),
+                        .div_in (div_default),
+                        .clk_out (pwm_clk));
+  pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm0 (.clk_in (pwm_clk),
+            .wr (pwm_wr[0]),
+            .ena (ena),
+            .rst_n (rst_n),
+            .compare_in (pwm_compare),
+            .pwm_out (pwm_out));
+  spi_interface spi ( .miso (uio_in[2]),
+                      .sck (uio_in[3]),
+                      .cs (uio_in[0]),
+                      .rst_n (rst_n),
+                      .data (spi_data),
+                      .data_rdy (data_rdy));
 
-  assign compare[7:0] = ui_in[7:0];
-
-  wire div_tick = (div_counter == div);
-
-  always @(posedge clk) begin
-    if (~rst_n) begin
-      counter <= 0;
-      div_counter <= 0;
-      div <= 0;
-    end else begin
-      div_counter <= div_tick ? 0 : div_counter + 1'b1;
-      counter     <= div_tick ? counter + 1'b1 : counter;
-      // Sacrifice one step of resolution at full duty cycle to get 100%
-      pwm_out <= (compare == (2**COMPARE_SIZE)-1) ? 1 : (counter < compare);
+  always @(posedge data_rdy) begin
+    if (pwm_addr < 8) begin
+      pwm_wr[pwm_addr] <= 1'b1;
     end
   end
+  always @(negedge data_rdy) begin
+    pwm_wr <= 0;
+  end
+
 endmodule
