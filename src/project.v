@@ -41,7 +41,7 @@ module tt_um_camdenmil_sky25b (
   assign uo_out = pwm_out;
 
   // List all unused inputs to prevent warnings
-  wire _unusedui_in = &{ui_in[7:2], 6'b0};
+  wire _unusedui_in = &{ui_in[7:1], 6'b0};
   wire _unuseduio_in1 = &{uio_in[7:4], 4'b0};
   wire _unuseduio_in2 = &{uio_in[1], ena, 1'b0};
   wire _unusedspi = &{spi_data[11:8], 4'b0};
