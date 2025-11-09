@@ -17,9 +17,7 @@ module tt_um_camdenmil_sky25b (
   assign uio_out = 0;
   assign uio_oe  = 0;
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, 1'b0};
-  wire _unused8 = &{uio_in, 8'b0};
+
 
   wire [2:0] div_default = 3'b000;
   
@@ -43,10 +41,16 @@ module tt_um_camdenmil_sky25b (
   reg pwm_out;
   assign uo_out[0] = pwm_out;
 
+  // List all unused inputs to prevent warnings
+  wire _unused = &{ena, 1'b0};
+  wire _unused8 = &{ui_in, 8'b0};
+  wire _unusedspi = spi_data[12:8];
+  wire _unusedpwm_wr = pwm_wr[7:1];
+
   clock_divider #(.CLK_DIV_SIZE(CLK_DIV_WIDTH)) clkdiv (.clk (clk),
                         .wr (clk_div_wr),
                         .rst_n (rst_n),
-                        .div_in (div_default),
+                        .div_in (clk_div_in),
                         .clk_out (div_clk_out),
                         .div_reg (clk_div_reg));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm0 (.clk_in (div_clk_out),

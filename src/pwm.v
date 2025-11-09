@@ -31,7 +31,9 @@ module pwm_generator
             end else if (clk_in)
                 counter <= counter + 1'b1;
             // Sacrifice one step of resolution at full duty cycle to get 100%
-            pwm_out <= (compare == (2**COMPARE_SIZE)-1) ? 1 : (counter < compare);
+            pwm_out <= ena ? 0 : 
+                (compare == (2**COMPARE_SIZE)-1) ? 1 : 
+                (counter < compare);
         end
     end
 endmodule
