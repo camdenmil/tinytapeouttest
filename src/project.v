@@ -13,8 +13,8 @@ module tt_um_camdenmil_sky25b (
   parameter PWM_REG_WIDTH = 10;
   parameter CLK_DIV_WIDTH = 4;
   // All output pins must be assigned. If not used, assign to 0.
-  assign uio_out[7:1] = 0;
-  assign uio_oe[7:1]  = 0;
+  assign uio_out[6:0] = 0;
+  assign uio_oe[6:0]  = 0;
   
   wire div_clk_out;
   wire [15:0] spi_data;
@@ -29,8 +29,8 @@ module tt_um_camdenmil_sky25b (
 
   assign div_clk_out_reg = div_clk_out_en ? div_clk_out: 0;
   assign div_clk_out_en = ~ui_in[1];
-  assign uio_out[0] = div_clk_out_reg;
-  assign uio_oe[0] = div_clk_out_en;
+  assign uio_out[7] = div_clk_out_reg;
+  assign uio_oe[7] = div_clk_out_en;
   assign pwm_compare = spi_data[PWM_REG_WIDTH-1:0];
   assign dev_addr[3:0] = spi_data[15:12];
   assign clk_div_in = spi_data[CLK_DIV_WIDTH-1:0];
