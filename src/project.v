@@ -10,7 +10,7 @@ module tt_um_camdenmil_sky25b (
 
 );
 
-  parameter PWM_REG_WIDTH = 8;
+  parameter PWM_REG_WIDTH = 10;
   parameter CLK_DIV_WIDTH = 4;
   // All output pins must be assigned. If not used, assign to 0.
   assign uio_out[7:1] = 0;
@@ -27,7 +27,8 @@ module tt_um_camdenmil_sky25b (
   reg div_clk_out_reg;
   reg div_clk_out_en;
 
-
+  assign div_clk_out_reg = div_clk_out_en ? div_clk_out: 0;
+  assign div_clk_out_en = ~ui_in[1];
   assign uio_out[0] = div_clk_out_reg;
   assign uio_oe[0] = div_clk_out_en;
   assign pwm_compare = spi_data[PWM_REG_WIDTH-1:0];
@@ -114,29 +115,24 @@ module tt_um_camdenmil_sky25b (
 
   reg exec_write; // So we only do a write for one clock cycle with data_rdy
 
-  always @(clk) begin
+  always @(posedge clk) begin
     if (~rst_n || ~data_rdy) begin
       pwm_wr <= 0;
       clk_div_wr <= 0;
       exec_write <= 0;
     end
-    if (clk) begin
-      if (data_rdy && ~exec_write) begin
-        exec_write <= 1;
-        if (dev_addr <= 4'h7) begin
-          pwm_wr <= 4'b1 << dev_addr;
-        end
-        if (dev_addr == 4'h8) begin
-          clk_div_wr <= 1;
-        end
-      end else begin
-        clk_div_wr <= 0;
-        pwm_wr <= 0;
+    if (data_rdy && ~exec_write) begin
+      exec_write <= 1;
+      if (dev_addr <= 4'h7) begin
+        pwm_wr <= 4'b1 << dev_addr;
       end
+      if (dev_addr == 4'h8) begin
+        clk_div_wr <= 1;
+      end
+    end else begin
+      clk_div_wr <= 0;
+      pwm_wr <= 0;
     end
-    // If enabled, output the divided clock
-    div_clk_out_en <= ~ui_in[1];
-    div_clk_out_reg <= div_clk_out_en ? div_clk_out: 0;
   end
 
 endmodule

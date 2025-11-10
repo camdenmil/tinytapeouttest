@@ -13,7 +13,7 @@ module pwm_generator
     reg [COMPARE_SIZE-1:0] counter;
     reg atomic_reg; // Only do one write per wr cycle
     reg wait_cycle; // Track if we're waiting for a zero to start PWM'ing to avoid glitches
-    always @(sys_clk) begin
+    always @(posedge sys_clk) begin
         if (~rst_n) begin
             compare <= 0;
             pwm_out <= 0;
