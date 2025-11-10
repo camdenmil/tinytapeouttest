@@ -10,7 +10,7 @@ module tt_um_camdenmil_sky25b (
 
 );
 
-  parameter PWM_REG_WIDTH = 10;
+  parameter PWM_REG_WIDTH = 8;
   parameter CLK_DIV_WIDTH = 4;
   // All output pins must be assigned. If not used, assign to 0.
   assign uio_out[7:1] = 0;
