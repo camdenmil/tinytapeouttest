@@ -25,14 +25,12 @@ module tt_um_camdenmil_sky25b (
   wire [CLK_DIV_WIDTH-1:0] clk_div_in;
   reg clk_div_wr;
   wire [CLK_DIV_WIDTH-1:0] clk_div_reg;
-  wire fast_clk;
   reg div_clk_out_reg;
   reg div_clk_out_en;
 
 
   assign uio_out[0] = div_clk_out_reg;
   assign uio_oe[0] = div_clk_out_en;
-  assign fast_clk = clk_div_reg == 0;
   assign pwm_compare = spi_data[PWM_REG_WIDTH-1:0];
   assign dev_addr[3:0] = spi_data[15:12];
   assign clk_div_in = spi_data[CLK_DIV_WIDTH-1:0];
@@ -41,7 +39,7 @@ module tt_um_camdenmil_sky25b (
   assign uo_out = pwm_out;
 
   // List all unused inputs to prevent warnings
-  wire _unusedui_in = &{ui_in[7:1], 6'b0};
+  wire _unusedui_in = &{ui_in[7:2], 6'b0};
   wire _unuseduio_in1 = &{uio_in[7:4], 4'b0};
   wire _unuseduio_in2 = &{uio_in[1], ena, 1'b0};
   wire _unusedspi = &{spi_data[11:8], 4'b0};
@@ -58,64 +56,56 @@ module tt_um_camdenmil_sky25b (
             .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out[0]),
-            .use_sys (fast_clk));
+            .pwm_out (pwm_out[0]));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm1 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[1]),
             .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out[1]),
-            .use_sys (fast_clk));
+            .pwm_out (pwm_out[1]));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm2 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[2]),
             .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out[2]),
-            .use_sys (fast_clk));
+            .pwm_out (pwm_out[2]));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm3 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[3]),
             .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out[3]),
-            .use_sys (fast_clk));
+            .pwm_out (pwm_out[3]));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm4 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[4]),
             .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out[4]),
-            .use_sys (fast_clk));
+            .pwm_out (pwm_out[4]));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm5 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[5]),
             .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out[5]),
-            .use_sys (fast_clk));
+            .pwm_out (pwm_out[5]));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm6 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[6]),
             .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out[6]),
-            .use_sys (fast_clk));
+            .pwm_out (pwm_out[6]));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm7 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[7]),
             .ena (ui_in[0]),
             .rst_n (rst_n),
             .compare_in (pwm_compare),
-            .pwm_out (pwm_out[7]),
-            .use_sys (fast_clk));
+            .pwm_out (pwm_out[7]));
   spi_interface spi ( .miso (uio_in[2]),
                       .sck (uio_in[3]),
                       .cs (uio_in[0]),
@@ -126,31 +116,29 @@ module tt_um_camdenmil_sky25b (
 
   reg exec_write; // So we only do a write for one clock cycle with data_rdy
 
-  always @(posedge clk) begin
+  always @(clk) begin
     if (~rst_n || ~data_rdy) begin
       pwm_wr <= 0;
       clk_div_wr <= 0;
       exec_write <= 0;
     end
-    if (data_rdy && ~exec_write) begin
-      exec_write <= 1;
-      if (dev_addr <= 4'h7) begin
-        pwm_wr <= 4'b1 << dev_addr;
+    if (clk) begin
+      if (data_rdy && ~exec_write) begin
+        exec_write <= 1;
+        if (dev_addr <= 4'h7) begin
+          pwm_wr <= 4'b1 << dev_addr;
+        end
+        if (dev_addr == 4'h8) begin
+          clk_div_wr <= 1;
+        end
+      end else begin
+        clk_div_wr <= 0;
+        pwm_wr <= 0;
       end
-      if (dev_addr == 4'h8) begin
-        clk_div_wr <= 1;
-      end
-    end else begin
-      clk_div_wr <= 0;
-      pwm_wr <= 0;
     end
-    if (ui_in[0]) begin
-      div_clk_out_en <= 1'b1;
-      div_clk_out_reg <= div_clk_out;
-    end else begin
-      div_clk_out_en <= 1'b0;
-      div_clk_out_reg <= 1'b0;
-    end
+    // If enabled, output the divided clock
+    div_clk_out_en <= ~ui_in[1];
+    div_clk_out_reg <= div_clk_out_en ? div_clk_out: 0;
   end
 
 endmodule
