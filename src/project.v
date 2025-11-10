@@ -24,8 +24,8 @@ module tt_um_camdenmil_sky25b (
   reg [7:0] pwm_wr;
   wire [CLK_DIV_WIDTH-1:0] clk_div_in;
   reg clk_div_wr;
-  reg div_clk_out_reg;
-  reg div_clk_out_en;
+  wire div_clk_out_reg;
+  wire div_clk_out_en;
 
   assign div_clk_out_reg = div_clk_out_en ? div_clk_out: 0;
   assign div_clk_out_en = ~ui_in[1];
