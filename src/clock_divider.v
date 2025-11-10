@@ -7,13 +7,11 @@ module clock_divider
     input wire wr, // Used to synchronize register writes
     input wire rst_n, // active-low
     input wire [CLK_DIV_SIZE-1:0] div_in,
-    output reg clk_out,
-    output wire [CLK_DIV_SIZE-1:0] div_reg
+    output reg clk_out
 );
     reg [CLK_DIV_SIZE-1:0] div;
     reg [2**CLK_DIV_SIZE:0] div_counter;
     wire div_tick = div_counter >= (1 << div) - 1;
-    assign div_reg = div;
     always @(clk) begin
         if (~rst_n) begin
             div_counter <= 0;

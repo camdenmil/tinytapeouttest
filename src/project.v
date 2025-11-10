@@ -24,7 +24,6 @@ module tt_um_camdenmil_sky25b (
   reg [7:0] pwm_wr;
   wire [CLK_DIV_WIDTH-1:0] clk_div_in;
   reg clk_div_wr;
-  wire [CLK_DIV_WIDTH-1:0] clk_div_reg;
   reg div_clk_out_reg;
   reg div_clk_out_en;
 
@@ -48,8 +47,7 @@ module tt_um_camdenmil_sky25b (
                         .wr (clk_div_wr),
                         .rst_n (rst_n),
                         .div_in (clk_div_in),
-                        .clk_out (div_clk_out),
-                        .div_reg (clk_div_reg));
+                        .clk_out (div_clk_out));
   pwm_generator #(.COMPARE_SIZE(PWM_REG_WIDTH)) pwm0 (.clk_in (div_clk_out),
             .sys_clk (clk),
             .wr (pwm_wr[0]),
